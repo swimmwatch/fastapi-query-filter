@@ -5,7 +5,7 @@ import enum
 import typing
 from datetime import datetime
 
-from pydantic import BaseModel, validator, root_validator
+from pydantic import BaseModel, validator
 
 QueryFilterValueType = typing.Any
 
@@ -70,9 +70,7 @@ class QueryFilter(BaseModel):
         available_operators = {member for member in QueryFilterOperators}
 
         if val not in available_operators:
-            raise ValueError(
-                f"Invalid operator. It must be from {QueryFilterOperators}"
-            )
+            raise ValueError(f"Invalid operator. It must be from {QueryFilterOperators}")
 
         return val
 

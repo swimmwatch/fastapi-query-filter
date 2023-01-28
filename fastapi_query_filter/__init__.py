@@ -19,9 +19,7 @@ class SqlQueryFilterFacade:
         QueryFilterOperators.GT: lambda value: ("__gt__", value),
         QueryFilterOperators.GE: lambda value: ("__ge__", value),
         QueryFilterOperators.IN: lambda value: ("in_", value),
-        QueryFilterOperators.IS_NULL: lambda value: ("is_", None)
-        if value is True
-        else ("is_not", None),
+        QueryFilterOperators.IS_NULL: lambda value: ("is_", None) if value is True else ("is_not", None),
         QueryFilterOperators.LT: lambda value: ("__lt__", value),
         QueryFilterOperators.LE: lambda value: ("__le__", value),
         QueryFilterOperators.LIKE: lambda value: ("like", f"%{value}%"),
@@ -53,9 +51,7 @@ class SqlQueryFilterFacade:
             for field_name, field_metadata in self.defined_filter.query_fields.items()
         }
 
-    def _extract_query_values(
-        self, queries: SqlQueryFilterType
-    ) -> typing.Dict[str, typing.Any]:
+    def _extract_query_values(self, queries: SqlQueryFilterType) -> typing.Dict[str, typing.Any]:
         grouped_queries = group_by(
             queries,
             lambda query: query.field,
@@ -83,9 +79,7 @@ class SqlQueryFilterFacade:
         elif query_field_metadata.filter_type is FilterType.HAVING:
             base_stmt = base_stmt.having(expression)
         else:
-            raise NotImplementedError(
-                f"Unhandled condition operand type: {query_field_metadata.filter_type}"
-            )
+            raise NotImplementedError(f"Unhandled condition operand type: {query_field_metadata.filter_type}")
         return base_stmt
 
     def apply(
@@ -101,9 +95,7 @@ class SqlQueryFilterFacade:
             if query.field in exclude_fields:
                 continue
 
-            query_field_metadata = self.defined_filter.query_fields.get(
-                query.field, None
-            )
+            query_field_metadata = self.defined_filter.query_fields.get(query.field, None)
             if query_field_metadata is None:
                 raise ValueError(f"No such query field: {query.field}")
 
@@ -111,16 +103,10 @@ class SqlQueryFilterFacade:
                 _, value = self._get_orm_operator(query.operator, query.value)
                 if value:
                     expression = query_field_metadata.model_field
-                    base_stmt = self._apply_expression(
-                        base_stmt, expression, query_field_metadata
-                    )
+                    base_stmt = self._apply_expression(base_stmt, expression, query_field_metadata)
             else:
                 operator, value = self._get_orm_operator(query.operator, query.value)
-                expression = self._get_orm_expression(
-                    query_field_metadata.model_field, operator, value
-                )
-                base_stmt = self._apply_expression(
-                    base_stmt, expression, query_field_metadata
-                )
+                expression = self._get_orm_expression(query_field_metadata.model_field, operator, value)
+                base_stmt = self._apply_expression(base_stmt, expression, query_field_metadata)
 
         return base_stmt

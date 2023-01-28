@@ -65,16 +65,10 @@ class QueryType:
 
             query_begin, query_end = sorted(queries, key=lambda query: query.value)
 
-            if (
-                query_begin.operator not in MORE_OPERATORS
-                or query_end.operator not in LESS_OPERATORS
-            ):
+            if query_begin.operator not in MORE_OPERATORS or query_end.operator not in LESS_OPERATORS:
                 raise ValueError("Query must be interval.")
 
-            if not (
-                isinstance(interval.begin, value_type)
-                and isinstance(interval.end, value_type)
-            ):
+            if not (isinstance(interval.begin, value_type) and isinstance(interval.end, value_type)):
                 raise ValueError("Query value has invalid type")
 
     class Include(BaseQuery):
@@ -108,9 +102,7 @@ class QueryType:
 
             query = queries[0]
             if query.operator is QueryFilterOperators.OPTION:
-                raise ValueError(
-                    f"Query '{query.field}' use only '{QueryFilterOperators.OPTION}' operator"
-                )
+                raise ValueError(f"Query '{query.field}' use only '{QueryFilterOperators.OPTION}' operator")
 
             value = cls.interpret_value(queries)
             if not isinstance(value, bool):

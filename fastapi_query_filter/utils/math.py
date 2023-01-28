@@ -22,7 +22,7 @@ class IntervalType:
         return self.begin == other.begin and self.end == other.end
 
     @classmethod
-    def from_list(cls, xs) -> 'IntervalType':
+    def from_list(cls, xs) -> "IntervalType":
         if len(xs) < 2:
             raise ValueError("Interval contains two parts: begin and end.")
 

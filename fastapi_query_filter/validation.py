@@ -24,9 +24,7 @@ class QueryFilterValidator:
     def __init__(self, defined_filter: BaseDeclarativeFilter):
         self.defined_filter = defined_filter
 
-    def _call_user_validators(
-        self, passed_field_name: str, queries: typing.Iterable[QueryFilter]
-    ):
+    def _call_user_validators(self, passed_field_name: str, queries: typing.Iterable[QueryFilter]):
         validators = self.defined_filter.query_fields_validators.get(passed_field_name, None)
         if validators is None:
             return
@@ -40,9 +38,7 @@ class QueryFilterValidator:
         query_field_metadata: QueryField,
         queries: typing.List[QueryFilter],
     ):
-        query_field_metadata.query_type.validate(
-            queries, query_field_metadata.value_type
-        )
+        query_field_metadata.query_type.validate(queries, query_field_metadata.value_type)
 
     def validate(self, queries: SqlQueryFilterType):
         """
@@ -54,9 +50,9 @@ class QueryFilterValidator:
             list,
         )
         for passed_field_name, curr_query_set in grouped_queries.items():
-            query_field_metadata: typing.Optional[
-                QueryField
-            ] = self.defined_filter.query_fields.get(passed_field_name, None)
+            query_field_metadata: typing.Optional[QueryField] = self.defined_filter.query_fields.get(
+                passed_field_name, None
+            )
             if query_field_metadata is None:
                 raise ValueError(f"Not defined query field: {passed_field_name}")
 
