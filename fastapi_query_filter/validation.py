@@ -38,7 +38,7 @@ class QueryFilterValidator:
         query_field_metadata: QueryField,
         queries: typing.List[QueryFilter],
     ):
-        query_field_metadata.query_type.validate(queries, query_field_metadata.value_type)
+        query_field_metadata.query_type.validate(queries)
 
     def validate(self, queries: QueryFilterRequest):
         """

@@ -18,16 +18,13 @@ class QueryField:
 
     def __init__(
         self,
+        query_type: BaseQuery,
         model_field,
-        query_type: typing.Type[BaseQuery],
-        value_type: typing.Type,
         filter_type: FilterType = FilterType.WHERE,
     ):
+        self.query_type = query_type
         self.model_field = model_field
         self.filter_type = filter_type
-
-        self.query_type = query_type
-        self.value_type = value_type
 
 
 class BaseDeclarativeFilter:
