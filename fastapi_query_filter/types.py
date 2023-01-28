@@ -1,3 +1,6 @@
+"""
+Constants and typings.
+"""
 import enum
 import typing
 from datetime import datetime
