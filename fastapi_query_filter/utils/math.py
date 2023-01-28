@@ -21,6 +21,9 @@ class IntervalType:
 
         return self.begin == other.begin and self.end == other.end
 
+    def __repr__(self):
+        return f"<{self.__class__.__name__} begin={self.begin}, end={self.end}>"
+
     @classmethod
     def from_list(cls, xs) -> "IntervalType":
         if len(xs) < 2:
