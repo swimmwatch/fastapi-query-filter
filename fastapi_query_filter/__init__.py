@@ -6,6 +6,7 @@ from .utils.iter import group_by
 from .definition import (
     BaseDeclarativeFilter,
     FilterType,
+    QueryField,
 )
 from .query import QueryType
 from .types import QueryFilterRequest, QueryFilterOperators
@@ -73,13 +74,13 @@ class SqlQueryFilterFacade:
     def _get_orm_expression(self, model_field, operator: str, value: typing.Any):
         return getattr(model_field, operator)(value)
 
-    def _apply_expression(self, base_stmt, expression, query_field_metadata):
-        if query_field_metadata.filter_type is FilterType.WHERE:
+    def _apply_expression(self, base_stmt, expression, query_field: QueryField):
+        if query_field.filter_type is FilterType.WHERE:
             base_stmt = base_stmt.filter(expression)
-        elif query_field_metadata.filter_type is FilterType.HAVING:
+        elif query_field.filter_type is FilterType.HAVING:
             base_stmt = base_stmt.having(expression)
         else:
-            raise NotImplementedError(f"Unhandled condition operand type: {query_field_metadata.filter_type}")
+            raise NotImplementedError(f"Unhandled condition operand type: {query_field.filter_type}")
         return base_stmt
 
     def apply(
@@ -95,18 +96,18 @@ class SqlQueryFilterFacade:
             if query.field in exclude_fields:
                 continue
 
-            query_field_metadata = self.defined_filter.query_fields.get(query.field, None)
-            if query_field_metadata is None:
+            query_field = self.defined_filter.query_fields.get(query.field, None)
+            if query_field is None:
                 raise ValueError(f"No such query field: {query.field}")
 
-            if query_field_metadata.query_type is QueryType.Option:
+            if isinstance(query_field.query_type, QueryType.Option):
                 _, value = self._get_orm_operator(query.operator, query.value)
                 if value:
-                    expression = query_field_metadata.model_field
-                    base_stmt = self._apply_expression(base_stmt, expression, query_field_metadata)
+                    expression = query_field.model_field
+                    base_stmt = self._apply_expression(base_stmt, expression, query_field)
             else:
                 operator, value = self._get_orm_operator(query.operator, query.value)
-                expression = self._get_orm_expression(query_field_metadata.model_field, operator, value)
-                base_stmt = self._apply_expression(base_stmt, expression, query_field_metadata)
+                expression = self._get_orm_expression(query_field.model_field, operator, value)
+                base_stmt = self._apply_expression(base_stmt, expression, query_field)
 
         return base_stmt
