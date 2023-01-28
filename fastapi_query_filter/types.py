@@ -65,17 +65,16 @@ class QueryFilter(BaseModel):
             raise ValueError("Field value must be not empty")
         return val
 
-    @root_validator
-    def check_operator(cls, values):
-        operator = values.get("operator")
+    @validator("operator")
+    def check_operator(cls, val):
         available_operators = {member for member in QueryFilterOperators}
 
-        if operator not in available_operators:
+        if val not in available_operators:
             raise ValueError(
                 f"Invalid operator. It must be from {QueryFilterOperators}"
             )
 
-        return values
+        return val
 
     @validator("value")
     def parse_value_type(cls, val):
