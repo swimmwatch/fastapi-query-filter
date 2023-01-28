@@ -51,6 +51,38 @@ COMPARE_OPERATORS = {
 }
 
 
+class QueryFilterValueInterpreter:
+    """
+    Interpret query filter value.
+    """
+
+    @staticmethod
+    def interpret(value: QueryFilterValueType):
+        if isinstance(value, str):
+            # try parse datetime from string
+            try:
+                value = datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+                return value
+            except ValueError:
+                pass
+
+            # try parse time from string
+            try:
+                value = datetime.strptime(value, "%H:%M:%S").time()
+                return value
+            except ValueError:
+                pass
+
+            # try parse date from string
+            try:
+                value = datetime.strptime(value, "%Y-%m-%d").date()
+                return value
+            except ValueError:
+                pass
+
+        return value
+
+
 class QueryFilter(BaseModel):
     field: str
     operator: QueryFilterOperators
@@ -79,29 +111,7 @@ class QueryFilter(BaseModel):
         """
         Parse appropriate types for value field.
         """
-        if isinstance(val, str):
-            # try parse datetime from string
-            try:
-                val = datetime.strptime(val, "%Y-%m-%d %H:%M:%S")
-                return val
-            except ValueError:
-                pass
-
-            # try parse time from string
-            try:
-                val = datetime.strptime(val, "%H:%M:%S").time()
-                return val
-            except ValueError:
-                pass
-
-            # try parse date from string
-            try:
-                val = datetime.strptime(val, "%Y-%m-%d").date()
-                return val
-            except ValueError:
-                pass
-
-        return val
+        return QueryFilterValueInterpreter.interpret(val)
 
 
 SqlQueryFilterType = typing.List[QueryFilter]
