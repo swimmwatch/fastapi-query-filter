@@ -5,7 +5,7 @@ from .utils.math import IntervalType
 from .types import (
     INCLUDE_OPERATORS,
     QueryFilter,
-    SqlQueryFilterType,
+    QueryFilterRequest,
     MORE_OPERATORS,
     LESS_OPERATORS,
     COMPARE_OPERATORS,
@@ -16,7 +16,7 @@ from .types import (
 class BaseQuery(abc.ABC):
     @classmethod
     @abc.abstractmethod
-    def interpret_value(cls, queries: SqlQueryFilterType):
+    def interpret_value(cls, queries: QueryFilterRequest):
         """
         Interpret value from queries.
         """
@@ -24,7 +24,7 @@ class BaseQuery(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def validate(cls, queries: SqlQueryFilterType, value_type: typing.Type):
+    def validate(cls, queries: QueryFilterRequest, value_type: typing.Type):
         """
         Validate queries with common operator.
         """
@@ -34,7 +34,7 @@ class BaseQuery(abc.ABC):
 class QueryType:
     class Compare(BaseQuery):
         @classmethod
-        def interpret_value(cls, queries: SqlQueryFilterType):
+        def interpret_value(cls, queries: QueryFilterRequest):
             return queries[0].value
 
         @classmethod
@@ -52,7 +52,7 @@ class QueryType:
 
     class Interval(BaseQuery):
         @classmethod
-        def interpret_value(cls, queries: SqlQueryFilterType):
+        def interpret_value(cls, queries: QueryFilterRequest):
             values = [query.value for query in queries]
             return IntervalType.from_list(values)
 
@@ -73,7 +73,7 @@ class QueryType:
 
     class Include(BaseQuery):
         @classmethod
-        def interpret_value(cls, queries: SqlQueryFilterType):
+        def interpret_value(cls, queries: QueryFilterRequest):
             return queries[0].value
 
         @classmethod
@@ -92,7 +92,7 @@ class QueryType:
 
     class Option(BaseQuery):
         @classmethod
-        def interpret_value(cls, queries: SqlQueryFilterType) -> bool:
+        def interpret_value(cls, queries: QueryFilterRequest) -> bool:
             return queries[0].value
 
         @classmethod

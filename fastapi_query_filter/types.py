@@ -114,7 +114,7 @@ class QueryFilter(BaseModel):
         return QueryFilterValueInterpreter.interpret(val)
 
 
-SqlQueryFilterType = typing.List[QueryFilter]
+QueryFilterRequest = typing.List[QueryFilter]
 ValidatorHandler = typing.Callable[[object, QueryFilter], None]
 
 

@@ -1,7 +1,7 @@
 import typing
 
 from .utils.iter import group_by
-from .types import SqlQueryFilterType
+from .types import QueryFilterRequest
 from .definition import QueryField, BaseDeclarativeFilter
 from .types import QueryFilter, Validator, ValidatorHandler
 
@@ -40,7 +40,7 @@ class QueryFilterValidator:
     ):
         query_field_metadata.query_type.validate(queries, query_field_metadata.value_type)
 
-    def validate(self, queries: SqlQueryFilterType):
+    def validate(self, queries: QueryFilterRequest):
         """
         Validate passed query filter.
         """

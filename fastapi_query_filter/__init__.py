@@ -8,7 +8,7 @@ from .definition import (
     FilterType,
 )
 from .query import QueryType
-from .types import SqlQueryFilterType, QueryFilterOperators
+from .types import QueryFilterRequest, QueryFilterOperators
 from .validation import QueryFilterValidator
 
 
@@ -32,7 +32,7 @@ class SqlQueryFilterFacade:
     def __init__(
         self,
         defined_filter: BaseDeclarativeFilter,
-        queries: SqlQueryFilterType,
+        queries: QueryFilterRequest,
         validate: bool = True,
     ):
         self.defined_filter = defined_filter
@@ -51,7 +51,7 @@ class SqlQueryFilterFacade:
             for field_name, field_metadata in self.defined_filter.query_fields.items()
         }
 
-    def _extract_query_values(self, queries: SqlQueryFilterType) -> typing.Dict[str, typing.Any]:
+    def _extract_query_values(self, queries: QueryFilterRequest) -> typing.Dict[str, typing.Any]:
         grouped_queries = group_by(
             queries,
             lambda query: query.field,
