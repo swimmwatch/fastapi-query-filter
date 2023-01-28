@@ -35,10 +35,10 @@ class QueryFilterValidator:
 
     def _call_query_type_validator(
         self,
-        query_field_metadata: QueryField,
+        query_field: QueryField,
         queries: typing.List[QueryFilter],
     ):
-        query_field_metadata.query_type.validate(queries)
+        query_field.query_type.validate(queries)
 
     def validate(self, queries: QueryFilterRequest):
         """
@@ -50,11 +50,9 @@ class QueryFilterValidator:
             list,
         )
         for passed_field_name, curr_query_set in grouped_queries.items():
-            query_field_metadata: typing.Optional[QueryField] = self.defined_filter.query_fields.get(
-                passed_field_name, None
-            )
-            if query_field_metadata is None:
+            query_field: typing.Optional[QueryField] = self.defined_filter.query_fields.get(passed_field_name, None)
+            if query_field is None:
                 raise ValueError(f"Not defined query field: {passed_field_name}")
 
-            self._call_query_type_validator(query_field_metadata, curr_query_set)  # type: ignore
+            self._call_query_type_validator(query_field, curr_query_set)  # type: ignore
             self._call_user_validators(passed_field_name, curr_query_set)
