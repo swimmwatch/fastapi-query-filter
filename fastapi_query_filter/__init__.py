@@ -110,20 +110,19 @@ class SqlQueryFilterFacade:
     def _get_orm_operator(self, operator: QueryFilterOperators, value: typing.Any):
         return _ORM_OPERATOR_TRANSFORMER[operator](value)
 
-    def _get_orm_expression(self, model_field, operator: str, value: typing.Any):
-        return getattr(model_field, operator)(value)
-
-    def _apply_expression(self, base_stmt: Select, query: QueryFilter, query_field: QueryField):
+    def _get_orm_expression(self, query_filter: QueryFilter, query_field: QueryField):
         if isinstance(query_field.query_type, QueryType.Option):
-            expression = query_field.model_field
+            return query_field.model_field
         else:
-            orm_operator, value = self._get_orm_operator(query.operator, query.value)
-            expression = self._get_orm_expression(query_field.model_field, orm_operator, value)
+            orm_operator, value = self._get_orm_operator(query_filter.operator, query_filter.value)
+            return getattr(query_field.model_field, orm_operator)(value)
 
+    def _apply_expression(self, base_stmt: Select, query_filter: QueryFilter, query_field: QueryField):
+        orm_expression = self._get_orm_expression(query_filter, query_field)
         if query_field.filter_type is FilterType.WHERE:
-            base_stmt = base_stmt.filter(expression)
+            base_stmt = base_stmt.filter(orm_expression)
         elif query_field.filter_type is FilterType.HAVING:
-            base_stmt = base_stmt.having(expression)
+            base_stmt = base_stmt.having(orm_expression)
         else:
             raise NotImplementedError(f"Unhandled condition operand type: {query_field.filter_type}")
         return base_stmt
@@ -137,13 +136,13 @@ class SqlQueryFilterFacade:
         Apply query filter to base statement.
         """
         exclude_fields = exclude_fields or set()
-        for query in chain.from_iterable(self._grouped_queries.values()):
-            if query.field in exclude_fields:
+        for query_filter in chain.from_iterable(self._grouped_queries.values()):
+            if query_filter.field in exclude_fields:
                 continue
 
-            query_field = self.defined_filter.query_fields.get(query.field, None)
+            query_field = self.defined_filter.query_fields.get(query_filter.field, None)
             if query_field is None:
-                raise ValueError(f"No such query field: {query.field}")
+                raise ValueError(f"No such query field: {query_filter.field}")
 
-            base_stmt = self._apply_expression(base_stmt, query, query_field)
+            base_stmt = self._apply_expression(base_stmt, query_filter, query_field)
         return base_stmt
