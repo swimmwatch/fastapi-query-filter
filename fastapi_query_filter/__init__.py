@@ -11,7 +11,7 @@ from .definition import (
     QueryField,
 )
 from .query import QueryType
-from .types import QueryFilterRequest, QueryFilterOperators
+from .types import QueryFilterRequest, QueryFilterOperators, QueryFilter
 from .utils.math import IntervalType
 from .validation import QueryFilterValidator
 
@@ -113,7 +113,13 @@ class SqlQueryFilterFacade:
     def _get_orm_expression(self, model_field, operator: str, value: typing.Any):
         return getattr(model_field, operator)(value)
 
-    def _apply_expression(self, base_stmt, expression, query_field: QueryField):
+    def _apply_expression(self, base_stmt: Select, query: QueryFilter, query_field: QueryField):
+        if isinstance(query_field.query_type, QueryType.Option):
+            expression = query_field.model_field
+        else:
+            orm_operator, value = self._get_orm_operator(query.operator, query.value)
+            expression = self._get_orm_expression(query_field.model_field, orm_operator, value)
+
         if query_field.filter_type is FilterType.WHERE:
             base_stmt = base_stmt.filter(expression)
         elif query_field.filter_type is FilterType.HAVING:
@@ -139,14 +145,5 @@ class SqlQueryFilterFacade:
             if query_field is None:
                 raise ValueError(f"No such query field: {query.field}")
 
-            if isinstance(query_field.query_type, QueryType.Option):
-                _, value = self._get_orm_operator(query.operator, query.value)
-                if value:
-                    expression = query_field.model_field
-                    base_stmt = self._apply_expression(base_stmt, expression, query_field)
-            else:
-                operator, value = self._get_orm_operator(query.operator, query.value)
-                expression = self._get_orm_expression(query_field.model_field, operator, value)
-                base_stmt = self._apply_expression(base_stmt, expression, query_field)
-
+            base_stmt = self._apply_expression(base_stmt, query, query_field)
         return base_stmt
