@@ -15,24 +15,24 @@ from .types import QueryFilterRequest, QueryFilterOperators
 from .utils.math import IntervalType
 from .validation import QueryFilterValidator
 
+_ORM_OPERATOR_TRANSFORMER = {
+    QueryFilterOperators.NOT_EQ: lambda value: ("__ne__", value),
+    QueryFilterOperators.EQ: lambda value: ("__eq__", value),
+    QueryFilterOperators.GT: lambda value: ("__gt__", value),
+    QueryFilterOperators.GE: lambda value: ("__ge__", value),
+    QueryFilterOperators.IN: lambda value: ("in_", value),
+    QueryFilterOperators.IS_NULL: lambda value: ("is_", None) if value is True else ("is_not", None),
+    QueryFilterOperators.LT: lambda value: ("__lt__", value),
+    QueryFilterOperators.LE: lambda value: ("__le__", value),
+    QueryFilterOperators.LIKE: lambda value: ("like", f"%{value}%"),
+    QueryFilterOperators.ILIKE: lambda value: ("ilike", f"%{value}%"),
+    QueryFilterOperators.NOT: lambda value: ("is_not", value),
+    QueryFilterOperators.NOT_IN: lambda value: ("not_in", value),
+    QueryFilterOperators.OPTION: lambda value: ("", value),
+}
+
 
 class SqlQueryFilterFacade:
-    _orm_operator_transformer = {
-        QueryFilterOperators.NOT_EQ: lambda value: ("__ne__", value),
-        QueryFilterOperators.EQ: lambda value: ("__eq__", value),
-        QueryFilterOperators.GT: lambda value: ("__gt__", value),
-        QueryFilterOperators.GE: lambda value: ("__ge__", value),
-        QueryFilterOperators.IN: lambda value: ("in_", value),
-        QueryFilterOperators.IS_NULL: lambda value: ("is_", None) if value is True else ("is_not", None),
-        QueryFilterOperators.LT: lambda value: ("__lt__", value),
-        QueryFilterOperators.LE: lambda value: ("__le__", value),
-        QueryFilterOperators.LIKE: lambda value: ("like", f"%{value}%"),
-        QueryFilterOperators.ILIKE: lambda value: ("ilike", f"%{value}%"),
-        QueryFilterOperators.NOT: lambda value: ("is_not", value),
-        QueryFilterOperators.NOT_IN: lambda value: ("not_in", value),
-        QueryFilterOperators.OPTION: lambda value: ("", value),
-    }
-
     def __init__(
         self,
         defined_filter: BaseDeclarativeFilter,
@@ -108,7 +108,7 @@ class SqlQueryFilterFacade:
         return fields
 
     def _get_orm_operator(self, operator: QueryFilterOperators, value: typing.Any):
-        return self._orm_operator_transformer[operator](value)
+        return _ORM_OPERATOR_TRANSFORMER[operator](value)
 
     def _get_orm_expression(self, model_field, operator: str, value: typing.Any):
         return getattr(model_field, operator)(value)
