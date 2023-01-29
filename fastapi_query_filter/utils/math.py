@@ -1,10 +1,19 @@
 """
 Math utilities.
 """
-from .types import CT
+from typing import Generic, TypeVar, Protocol
+
+from .types import Comparable, SupportsSub, SupportsAdd
 
 
-class IntervalType:
+class IntervalAllowedMixinType(Comparable, SupportsSub, SupportsAdd, Protocol):
+    pass
+
+
+CT = TypeVar("CT", bound=IntervalAllowedMixinType)
+
+
+class IntervalType(Generic[CT]):
     def __init__(self, begin: CT, end: CT):
         if begin > end:
             raise ValueError("Begin must be less than end")
@@ -23,6 +32,12 @@ class IntervalType:
 
     def __repr__(self):
         return f"<{self.__class__.__name__} begin={self.begin}, end={self.end}>"
+
+    def __add__(self, other: CT) -> "IntervalType":
+        return IntervalType(self.begin + other, self.end + other)
+
+    def __sub__(self, other: CT) -> "IntervalType":
+        return IntervalType(self.begin - other, self.end - other)
 
     @classmethod
     def from_list(cls, xs) -> "IntervalType":
