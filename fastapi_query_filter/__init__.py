@@ -1,4 +1,6 @@
 import typing
+from copy import deepcopy
+from itertools import chain
 
 from sqlalchemy.sql import Select
 
@@ -10,6 +12,7 @@ from .definition import (
 )
 from .query import QueryType
 from .types import QueryFilterRequest, QueryFilterOperators
+from .utils.math import IntervalType
 from .validation import QueryFilterValidator
 
 
@@ -37,14 +40,55 @@ class SqlQueryFilterFacade:
         validate: bool = True,
     ):
         self.defined_filter = defined_filter
-        self.queries = queries
+        self._queries = deepcopy(queries)
+        self._grouped_queries = group_by(
+            self._queries,
+            lambda q: q.field,
+            list,
+        )
 
         self.validator = QueryFilterValidator(self.defined_filter)
         if validate:
-            self.validator.validate(self.queries)
+            self.validator.validate(self._queries)
 
-        self.values = self._extract_query_values(self.queries)
+        self._values = self._extract_query_values()
+        self._values_accessor = self._make_values_accessor_class()
         self.fields = self._extract_model_fields()
+
+    @property
+    def v(self):
+        return self._values_accessor()
+
+    def _make_values_accessor_class(self):
+        this = self
+        attrs = dict()
+
+        # create proxy fields
+        for field_name in self._values:
+
+            def fget(self, key=field_name):
+                return this._values[key]
+
+            def fset(self, value, key=field_name):
+                assert type(this._values[key]) is type(
+                    value
+                ), "Assignment value must have the same type as source value."
+
+                # TODO: add value validation
+                this._values[key] = value
+                queries = this._grouped_queries[key]
+                if isinstance(value, IntervalType):
+                    query_begin, query_end = sorted(queries, key=lambda q: q.value)
+                    query_begin.value = value.begin
+                    query_end.value = value.end
+                else:
+                    queries[0].value = value
+
+            attrs[field_name] = property(fget, fset)
+
+        class_name = type(self.defined_filter).__name__ + "ValuesAccessor"
+        values_accessor = type(class_name, (object,), attrs)
+        return values_accessor
 
     def _extract_model_fields(self):
         return {
@@ -52,15 +96,10 @@ class SqlQueryFilterFacade:
             for field_name, field_metadata in self.defined_filter.query_fields.items()
         }
 
-    def _extract_query_values(self, queries: QueryFilterRequest) -> typing.Dict[str, typing.Any]:
-        grouped_queries = group_by(
-            queries,
-            lambda query: query.field,
-            list,
-        )
+    def _extract_query_values(self) -> typing.Dict[str, typing.Any]:
         fields: typing.Dict[str, typing.Any] = {}
         for field_name, field_metadata in self.defined_filter.query_fields.items():
-            curr_query_set = grouped_queries.get(field_name, None)
+            curr_query_set = self._grouped_queries.get(field_name, None)
             if curr_query_set is None:
                 fields[field_name] = None
             else:
@@ -92,7 +131,7 @@ class SqlQueryFilterFacade:
         Apply query filter to base statement.
         """
         exclude_fields = exclude_fields or set()
-        for query in self.queries:
+        for query in chain.from_iterable(self._grouped_queries.values()):
             if query.field in exclude_fields:
                 continue
 
