@@ -8,7 +8,7 @@ flake:
 	poetry run flake8 $(SRC_DIR)
 
 black:
-	poetry run flake8 $(SRC_DIR)
+	poetry run black $(SRC_DIR)
 
 lint: flake mypy
 

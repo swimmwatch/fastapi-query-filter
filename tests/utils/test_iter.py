@@ -15,8 +15,6 @@ from fastapi_query_filter.utils.iter import group_by
         ([1, 2, 3, 4], lambda x: x % 2, list, {0: [2, 4], 1: [1, 3]}),
     ],
 )
-def test_iter(
-    it: Iterable, func: Callable, default_factory, expected: Dict[Hashable, List[Any]]
-):
+def test_iter(it: Iterable, func: Callable, default_factory, expected: Dict[Hashable, List[Any]]):
     actual = group_by(it, func, default_factory)
     assert actual == expected

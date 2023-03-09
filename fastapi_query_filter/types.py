@@ -1,8 +1,11 @@
+"""
+Constants and typings.
+"""
 import enum
 import typing
 from datetime import datetime
 
-from pydantic import BaseModel, validator, root_validator
+from pydantic import BaseModel, validator
 
 QueryFilterValueType = typing.Any
 
@@ -48,6 +51,38 @@ COMPARE_OPERATORS = {
 }
 
 
+class QueryFilterValueInterpreter:
+    """
+    Interpret query filter value.
+    """
+
+    @staticmethod
+    def interpret(value: QueryFilterValueType):
+        if isinstance(value, str):
+            # try parse datetime from string
+            try:
+                value = datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+                return value
+            except ValueError:
+                pass
+
+            # try parse time from string
+            try:
+                value = datetime.strptime(value, "%H:%M:%S").time()
+                return value
+            except ValueError:
+                pass
+
+            # try parse date from string
+            try:
+                value = datetime.strptime(value, "%Y-%m-%d").date()
+                return value
+            except ValueError:
+                pass
+
+        return value
+
+
 class QueryFilter(BaseModel):
     field: str
     operator: QueryFilterOperators
@@ -62,49 +97,24 @@ class QueryFilter(BaseModel):
             raise ValueError("Field value must be not empty")
         return val
 
-    @root_validator
-    def check_operator(cls, values):
-        operator = values.get("operator")
+    @validator("operator")
+    def check_operator(cls, val):
         available_operators = {member for member in QueryFilterOperators}
 
-        if operator not in available_operators:
-            raise ValueError(
-                f"Invalid operator. It must be from {QueryFilterOperators}"
-            )
+        if val not in available_operators:
+            raise ValueError(f"Invalid operator. It must be from {QueryFilterOperators}")
 
-        return values
+        return val
 
     @validator("value")
     def parse_value_type(cls, val):
         """
         Parse appropriate types for value field.
         """
-        if isinstance(val, str):
-            # try parse datetime from string
-            try:
-                val = datetime.strptime(val, "%Y-%m-%d %H:%M:%S")
-                return val
-            except ValueError:
-                pass
-
-            # try parse time from string
-            try:
-                val = datetime.strptime(val, "%H:%M:%S").time()
-                return val
-            except ValueError:
-                pass
-
-            # try parse date from string
-            try:
-                val = datetime.strptime(val, "%Y-%m-%d").date()
-                return val
-            except ValueError:
-                pass
-
-        return val
+        return QueryFilterValueInterpreter.interpret(val)
 
 
-SqlQueryFilterType = typing.List[QueryFilter]
+QueryFilterRequest = typing.List[QueryFilter]
 ValidatorHandler = typing.Callable[[object, QueryFilter], None]
 
 

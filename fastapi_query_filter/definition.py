@@ -18,25 +18,20 @@ class QueryField:
 
     def __init__(
         self,
+        query_type: BaseQuery,
         model_field,
-        query_type: typing.Type[BaseQuery],
-        value_type: typing.Type,
         filter_type: FilterType = FilterType.WHERE,
     ):
+        self.query_type = query_type
         self.model_field = model_field
         self.filter_type = filter_type
-
-        self.query_type = query_type
-        self.value_type = value_type
 
 
 class BaseDeclarativeFilter:
     def __init__(self):
         self._user_defined_fields = self._get_user_defined_fields()
         self.query_fields = self._get_defined_query_fields(self._user_defined_fields)
-        self.query_fields_validators = self._get_defined_query_validators(
-            self._user_defined_fields
-        )
+        self.query_fields_validators = self._get_defined_query_validators(self._user_defined_fields)
 
     def _get_user_defined_fields(self) -> typing.Dict[str, typing.Any]:
         """
@@ -54,11 +49,7 @@ class BaseDeclarativeFilter:
         """
         Returns defined query validators.
         """
-        validators = (
-            field_value
-            for field_value in user_defined_fields.values()
-            if isinstance(field_value, Validator)
-        )
+        validators = (field_value for field_value in user_defined_fields.values() if isinstance(field_value, Validator))
         query_validators = defaultdict(list)
         for validator in validators:
             field_name, func = validator
@@ -66,9 +57,7 @@ class BaseDeclarativeFilter:
 
         return query_validators
 
-    def _get_defined_query_fields(
-        self, user_defined_fields
-    ) -> typing.Dict[str, QueryField]:
+    def _get_defined_query_fields(self, user_defined_fields) -> typing.Dict[str, QueryField]:
         return {
             field_name: field_value
             for field_name, field_value in user_defined_fields.items()

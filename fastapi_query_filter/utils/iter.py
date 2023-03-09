@@ -2,12 +2,10 @@
 Utilities for iterators.
 """
 from collections import defaultdict, deque
-from itertools import tee, filterfalse
 from typing import (
     TypeVar,
     Callable,
     Iterable,
-    Tuple,
     DefaultDict,
     Any,
     Type,
