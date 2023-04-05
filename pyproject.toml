@@ -8,7 +8,7 @@ packages = [{include = "fastapi_query_filter"}]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-sqlalchemy = "^2.0.7"
+sqlalchemy = "^2.0.8"
 pydantic = "^1.10.7"
 
 
@@ -17,7 +17,7 @@ pytest = "^7.2.2"
 pytest-cov = "^4.0.0"
 mypy = "^1.1"
 black = "^23.3.0"
-sqlalchemy = {extras = ["mypy"], version = "^2.0.7"}
+sqlalchemy = {extras = ["mypy"], version = "^2.0.8"}
 flake8 = "5.0.4"
 
 [build-system]
