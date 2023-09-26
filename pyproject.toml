@@ -9,7 +9,7 @@ packages = [{include = "fastapi_query_filter"}]
 [tool.poetry.dependencies]
 python = "^3.8"
 sqlalchemy = "^2.0.21"
-pydantic = "^2.3.0"
+pydantic = "^2.4.0"
 
 
 [tool.poetry.group.dev.dependencies]
