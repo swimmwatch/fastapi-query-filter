@@ -1,7 +1,7 @@
 import typing
 
 from .utils.iter import group_by
-from .types import SqlQueryFilterType
+from .types import QueryFilterRequest
 from .definition import QueryField, BaseDeclarativeFilter
 from .types import QueryFilter, Validator, ValidatorHandler
 
@@ -24,9 +24,7 @@ class QueryFilterValidator:
     def __init__(self, defined_filter: BaseDeclarativeFilter):
         self.defined_filter = defined_filter
 
-    def _call_user_validators(
-        self, passed_field_name: str, queries: typing.Iterable[QueryFilter]
-    ):
+    def _call_user_validators(self, passed_field_name: str, queries: typing.Iterable[QueryFilter]):
         validators = self.defined_filter.query_fields_validators.get(passed_field_name, None)
         if validators is None:
             return
@@ -37,14 +35,12 @@ class QueryFilterValidator:
 
     def _call_query_type_validator(
         self,
-        query_field_metadata: QueryField,
+        query_field: QueryField,
         queries: typing.List[QueryFilter],
     ):
-        query_field_metadata.query_type.validate(
-            queries, query_field_metadata.value_type
-        )
+        query_field.query_type.validate(queries)
 
-    def validate(self, queries: SqlQueryFilterType):
+    def validate(self, queries: QueryFilterRequest):
         """
         Validate passed query filter.
         """
@@ -54,11 +50,9 @@ class QueryFilterValidator:
             list,
         )
         for passed_field_name, curr_query_set in grouped_queries.items():
-            query_field_metadata: typing.Optional[
-                QueryField
-            ] = self.defined_filter.query_fields.get(passed_field_name, None)
-            if query_field_metadata is None:
+            query_field: typing.Optional[QueryField] = self.defined_filter.query_fields.get(passed_field_name, None)
+            if query_field is None:
                 raise ValueError(f"Not defined query field: {passed_field_name}")
 
-            self._call_query_type_validator(query_field_metadata, curr_query_set)  # type: ignore
+            self._call_query_type_validator(query_field, curr_query_set)  # type: ignore
             self._call_user_validators(passed_field_name, curr_query_set)
